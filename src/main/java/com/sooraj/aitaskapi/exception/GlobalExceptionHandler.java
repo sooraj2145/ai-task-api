@@ -5,12 +5,13 @@ import com.sooraj.aitaskapi.dto.TaskResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -19,17 +20,17 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(TaskNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public Map<String, Object> handleTaskNotFound(TaskNotFoundException e) {
-        return Map.of(
-                "status",404,
-                "message", e.getMessage(),
-                "timestamp", LocalDateTime.now()
+    public ErrorResponse handleTaskNotFound(TaskNotFoundException e) {
+        return new ErrorResponse(
+                404,
+                e.getMessage(),
+                LocalDateTime.now()
         );
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public Map<String, Object> handleValidationErrors(MethodArgumentNotValidException e) {
+    public ErrorResponse handleValidationErrors(MethodArgumentNotValidException e) {
 
         Map<String, String> errors = new LinkedHashMap<>();
 
@@ -41,13 +42,44 @@ public class GlobalExceptionHandler {
                         )
                 );
 
-        Map<String, Object> response = new LinkedHashMap<>();
+        return new ErrorResponse(
+                400,
+                "Validation failed",
+                LocalDateTime.now(),
+                errors
+        );
+    }
 
-        response.put("status", 400);
-        response.put("message", "Validation failed");
-        response.put("errors", errors);
-        response.put("timestamp", LocalDateTime.now());
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleTypeMismatch(MethodArgumentTypeMismatchException e) {
 
-        return response;
+        return new ErrorResponse(
+                400,
+                "Invalid value for parameter: " + e.getName(),
+                LocalDateTime.now()
+        );
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleConstraintViolation(ConstraintViolationException e) {
+        Map<String, String> errors = new LinkedHashMap<>();
+        e.getConstraintViolations()
+                .forEach(violation -> {
+                    String propertyPath =
+                            violation.getPropertyPath().toString();
+
+                    String field = propertyPath.substring(
+                            propertyPath.lastIndexOf('.') + 1
+                    );
+                    errors.put(field, violation.getMessage());
+                });
+        return new ErrorResponse(
+                400,
+                "Validation failed",
+                LocalDateTime.now(),
+                errors
+        );
     }
 }

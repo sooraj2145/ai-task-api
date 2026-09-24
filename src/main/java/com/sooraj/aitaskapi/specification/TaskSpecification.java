@@ -48,4 +48,12 @@ public class TaskSpecification {
             );
         };
     }
+
+    public static Specification<Task> belongsToUser(Long userId) {
+        return (root, query, criteriaBuilder) ->
+                criteriaBuilder.equal(
+                        root.get("user").get("id"),
+                        userId
+                );
+    }
 }

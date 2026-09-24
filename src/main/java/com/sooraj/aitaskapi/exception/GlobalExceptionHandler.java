@@ -82,4 +82,24 @@ public class GlobalExceptionHandler {
                 errors
         );
     }
+
+    @ExceptionHandler(EmailAlreadyExistsException.class)
+    @ResponseStatus(HttpStatus.CONFLICT)
+    public ErrorResponse handleEmailAlreadyExists(EmailAlreadyExistsException e) {
+        return new ErrorResponse(
+                HttpStatus.CONFLICT.value(),
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ErrorResponse handleInvalidCredentials(InvalidCredentialsException e) {
+        return new ErrorResponse(
+                HttpStatus.UNAUTHORIZED.value(),
+                e.getMessage(),
+                LocalDateTime.now()
+        );
+    }
 }

@@ -15,8 +15,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import com.sooraj.aitaskapi.specification.TaskSpecification;
 import org.springframework.data.jpa.domain.Specification;
+import com.sooraj.aitaskapi.entity.User;
+import org.springframework.security.core.context.SecurityContextHolder;
 
-import java.util.List;
 
 @Service
 public class TaskService {
@@ -29,6 +30,11 @@ public class TaskService {
 
     public TaskResponse createTask(CreateTaskRequest createTaskRequest) {
 
+        User currentUser = (User) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
         Task task = new Task();
 
         task.setTitle(createTaskRequest.getTitle());
@@ -38,8 +44,10 @@ public class TaskService {
                                     ? createTaskRequest.getPriority()
                                     : TaskPriority.MEDIUM
                         );
-
+        task.setStatus(TaskStatus.TODO);
         task.setDueDate(createTaskRequest.getDueDate());
+
+        task.setUser(currentUser);
 
         Task savedTask = taskRepository.save(task);
 
@@ -53,11 +61,17 @@ public class TaskService {
             Pageable pageable
     ) {
 
+        User currentUser = (User) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
         Specification<Task> specification =
                 Specification
-                        .where(TaskSpecification.search(search))
+                        .where(TaskSpecification.belongsToUser(currentUser.getId()))
+                        .and(TaskSpecification.search(search))
                         .and(TaskSpecification.hasStatus(status))
-                .and(TaskSpecification.hasPriority(priority));
+                        .and(TaskSpecification.hasPriority(priority));
 
         return taskRepository
                 .findAll(specification, pageable)
@@ -67,18 +81,39 @@ public class TaskService {
 
     public TaskResponse getTaskById(Long id) {
 
-        Task task = taskRepository.findById(id)
+        User currentUser = (User) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        Task task = taskRepository.findByIdAndUserId(
+                        id,
+                        currentUser.getId()
+                )
                 .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + id));
         return toResponse(task);
     }
 
     public TaskResponse updateTask(Long id, UpdateTaskRequest updateTaskRequest) {
 
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + id));
+        User currentUser = (User) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+
+        Task task = taskRepository.findByIdAndUserId(
+                id,
+                currentUser.getId()
+                )
+                .orElseThrow(() -> new TaskNotFoundException(
+                        "Task not found with id: " + id
+                )
+        );
 
         task.setTitle(updateTaskRequest.getTitle());
         task.setDescription(updateTaskRequest.getDescription());
+        task.setStatus(updateTaskRequest.getStatus());
         task.setPriority(updateTaskRequest.getPriority());
         task.setDueDate(updateTaskRequest.getDueDate());
 
@@ -89,7 +124,15 @@ public class TaskService {
 
     public void deleteTask(Long id){
 
-        Task task = taskRepository.findById(id)
+        User currentUser = (User) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        Task task = taskRepository.findByIdAndUserId(
+                id,
+                currentUser.getId()
+                )
                 .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + id));
 
         taskRepository.delete(task);
@@ -97,8 +140,19 @@ public class TaskService {
 
     public TaskResponse updateTaskStatus(Long id, UpdateTaskStatusRequest request) {
 
-        Task task = taskRepository.findById(id)
-                .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + id));
+        User currentUser = (User) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        Task task = taskRepository.findByIdAndUserId(
+                        id,
+                        currentUser.getId()
+                )
+                .orElseThrow(() -> new TaskNotFoundException(
+                        "Task not found with id: " + id
+                )
+        );
 
         task.setStatus(request.getStatus());
 

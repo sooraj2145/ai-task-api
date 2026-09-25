@@ -102,4 +102,16 @@ public class GlobalExceptionHandler {
                 LocalDateTime.now()
         );
     }
+
+    @ExceptionHandler(AiTaskException.class)
+    @ResponseStatus(HttpStatus.BAD_GATEWAY)
+    public ErrorResponse handleAiTaskException(AiTaskException e) {
+
+        return new ErrorResponse(
+                HttpStatus.BAD_GATEWAY.value(),
+                e.getMessage(),
+                LocalDateTime.now(),
+                null
+        );
+    }
 }

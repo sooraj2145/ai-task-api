@@ -161,6 +161,34 @@ public class TaskService {
         return toResponse(updatedTask);
     }
 
+    public Task getTaskEntityById(Long id) {
+
+        User currentUser = (User) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        return taskRepository.findByIdAndUserId(id, currentUser.getId())
+                .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + id));
+    }
+
+    public TaskResponse updateTaskPriority(Long id, TaskPriority priority) {
+
+        User currentUser = (User) SecurityContextHolder
+                .getContext()
+                .getAuthentication()
+                .getPrincipal();
+
+        Task task = taskRepository.findByIdAndUserId(id, currentUser.getId())
+                .orElseThrow(() -> new TaskNotFoundException("Task not found with id: " + id));
+
+        task.setPriority(priority);
+
+        Task updatedTask = taskRepository.save(task);
+
+        return toResponse(updatedTask);
+    }
+
 
 
 

@@ -10,6 +10,10 @@ public class UpdateTaskStatusRequest {
 
     public UpdateTaskStatusRequest() {}
 
+    public UpdateTaskStatusRequest(TaskStatus status) {
+        this.status = status;
+    }
+
     public TaskStatus getStatus() {
         return status;
     }

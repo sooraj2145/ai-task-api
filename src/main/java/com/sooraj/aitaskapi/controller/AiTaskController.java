@@ -10,7 +10,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/ai")
-public class AiTestController {
+public class AiTaskController {
 
     private final TaskService taskService;
     private final AiTaskService aiTaskService;
@@ -20,7 +20,7 @@ public class AiTestController {
     private final AiTaskToolService aiTaskToolService;
 
 
-    public AiTestController(
+    public AiTaskController(
             AiTaskService aiTaskService,
             AiTaskDecompositionService aiTaskDecompositionService,
             AiTaskPriorityService aiTaskPriorityService,

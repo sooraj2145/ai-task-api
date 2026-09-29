@@ -127,47 +127,11 @@ The AI does not directly modify the database. It produces a structured command w
 
 ## Architecture
 
-```text
-                        Client
-                          |
-                          v
-                 Spring Boot REST API
-                          |
-             +------------+------------+
-             |                         |
-             v                         v
-       Authentication              Task API
-          / JWT                       |
-             |                        v
-             |                  Task Service
-             |                        |
-             |                        v
-             |                  PostgreSQL
-             |
-             v
-       Security Context
+![AI Task API Architecture](docs/architecture.png)
 
+The application follows a layered Spring Boot architecture with JWT-based authentication, user-specific authorization, PostgreSQL persistence, and an AI orchestration layer using Spring AI and Groq.
 
-                     AI API
-                        |
-                        v
-                  Spring AI
-                        |
-                        v
-                 Groq LLM API
-                        |
-                        v
-              Structured AI Output
-                        |
-                        v
-             Validation / Resolver
-                        |
-                        v
-                 Task Service
-                        |
-                        v
-                  PostgreSQL
-```
+The LLM is responsible for interpreting user intent and producing structured output. Application services remain responsible for validation, authorization, business rules, and database mutations.
 
 ## AI Safety Boundary
 
@@ -444,7 +408,7 @@ Response:
   "title": "Prepare for Spring Boot interview",
   "description": "Review core Spring Boot concepts ahead of the interview",
   "priority": "HIGH",
-  "dueDate": "2026-09-28",
+  "dueDate": "2026-09-30",
   "status": "TODO"
 }
 ```
@@ -490,10 +454,9 @@ Response (structured command, not yet executed):
 
 ```json
 {
-  "tool": "UPDATE_TASK_STATUS",
+  "command": "UPDATE_TASK_STATUS",
   "taskId": 42,
-  "status": "COMPLETED",
-  "priority": null
+  "value": "COMPLETED"
 }
 ```
 
@@ -550,8 +513,8 @@ Secrets should never be committed to the repository.
 ### Near-term
 
 - Rate limiting
-- CI/CD pipeline
 - Frontend application
+- Improved observability and structured logging
 
 ### Stretch goals
 
@@ -560,7 +523,6 @@ Secrets should never be committed to the repository.
 - Retrieval-Augmented Generation (RAG)
 - More advanced AI agents
 - Background AI processing
-- Cloud deployment
 - Kubernetes deployment
 
 ## Author
